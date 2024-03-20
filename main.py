@@ -6,28 +6,25 @@ import numpy as np
 def main():
     train_data = loadmat('characters.mat')
     train_data = train_data['char3'][0]
-
     test_data = loadmat('test.mat')
     test_data = test_data['test'][0]
 
     # Flatten the data
     patterns = [pattern.flatten() for pattern in train_data]
+    test_patterns = [pattern.flatten() for pattern in test_data]
     weights = sum([weight_matrix(pattern) for pattern in patterns])
 
-    # test "memory" recall
+    # test "memory" recallk
     recalled_patterns_and_energies = [updateNetwork(pattern, weights)
-                                      for pattern in patterns]
+                                      for pattern in test_patterns]
 
     for i in range(len(patterns)):
         transformationAnalysis(
             i, patterns[i], recalled_patterns_and_energies[i])
 
-    # flatten the test Data
-    # test_patterns = [d.flatten() for d in test_data]
-
 
 def transformationAnalysis(i, pattern, recalled_pattern_and_energies):
-    pattern = pattern.reshape(12, 12)
+    pattern = pattern.copy().reshape(12, 12)
     recalled_pattern, energies = recalled_pattern_and_energies
     recalled_pattern = recalled_pattern.reshape(12, 12)
 
@@ -53,13 +50,15 @@ def updateNetwork(pattern, weights, max_iterations=100):
     for _ in range(max_iterations):
         for i in np.random.permutation(len(new_pattern)):
             weighted_sum = np.dot(weights[i], new_pattern)
-            new_pattern[i] = 1 if weighted_sum >= 0 else 0
+            new_pattern[i] = 1 if weighted_sum > 0 else 0
 
         current_energy = Energy(new_pattern, weights)
         energies.append(current_energy)
 
-        if energies[-1] == energies[-2]:  # Convergence check
+        if np.array_equal(new_pattern, pattern):
             break
+
+        pattern = new_pattern.copy()
 
     return new_pattern, energies
 
