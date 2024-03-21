@@ -24,6 +24,8 @@ def main():
     for i in range(len(patterns)):
         transformationAnalysis(i, patterns[i], recalled_patterns_and_energies[i])
 
+    # TODO: Test the network with the test data
+
 
 def transformationAnalysis(i, pattern, recalled_pattern_and_energies):
     pattern = pattern.copy().reshape(12, 12)
@@ -48,6 +50,8 @@ def transformationAnalysis(i, pattern, recalled_pattern_and_energies):
     )
 
     plt.show()
+
+    # TODO calculate error between pattern and recalled pattern, display calculated error
 
 
 def updateNetwork(pattern, weights, max_iterations=1000):
