@@ -6,16 +6,11 @@ import random
 
 
 def main():
-    indexes = random.sample(range(18), 7)
+    # indexes = random.sample(range(18), 7)
     train_data = loadmat("characters.mat")
     train_data = train_data["char3"][0]
     test_data = loadmat("test.mat")
     test_data = test_data["test"][0]
-
-    for i in range(len(train_data)):
-        plt.imshow(train_data[i], cmap="gray")
-        plt.title(f"Pattern {i+1}")
-        plt.savefig(f"./png/Pattern_{i+1}.png")
 
     # Flatten the data
     patterns = [pattern.reshape(-1, 1).astype(int) for pattern in train_data]
@@ -24,15 +19,16 @@ def main():
     # test_patterns = [pattern.flatten() for pattern in test_data]
     weights = sum([weightMatrix(pattern) for pattern in patterns])
 
-    # test "memory" recall
-    recalled_patterns_and_energies = [updateNetwork(
-        pattern, weights) for pattern in patterns]
-
-    for i in range(len(patterns)):
-        transformationAnalysis(
-            i, patterns[i], recalled_patterns_and_energies[i])
-
+    # # test "memory" recall
+    # recalled_patterns_and_energies = [updateNetwork(
+    #     pattern, weights) for pattern in patterns]
+    #
+    # for i in range(len(patterns)):
+    #     transformationAnalysis(
+    #         i, patterns[i], recalled_patterns_and_energies[i])
+    #
     # TODO: Test the network with the test data
+
     recalled_patterns_and_energies = [
         updateNetwork(pattern, weights) for pattern in test_patterns
     ]
@@ -63,33 +59,32 @@ def transformationAnalysis(i, pattern, recalled_pattern_and_energies):
         left=None, bottom=None, right=None, top=None, wspace=0.8, hspace=None
     )
 
-    plt.show()
+    plt.savefig(f"./png/Pattern_{i+1}_Recalled_no_early.png")
 
     # TODO calculate error between pattern and recalled pattern, display calculated error
-    print(f"Error between pattern {i+1} and recalled pattern: {np.sum(np.abs(pattern - recalled_pattern))}")
+    print(
+        f"Error between pattern {i+1} and recalled pattern: {np.sum(np.abs(pattern - recalled_pattern))}")
 
 
 def updateNetwork(pattern, weights, max_iterations=100):
 
     pattern = (pattern * 2) - 1
     energies = [Energy(pattern, weights)]
-    new_pattern = pattern.copy()
 
     for _ in range(max_iterations):
         # for i in random.sample(range(len(pattern)), len(pattern)):
         i = random.randint(0, len(pattern) - 1)
         weighted_sum = np.dot(weights[i, :], pattern)
-        new_pattern[i] = 1 if weighted_sum >= 0 else -1
+        pattern[i] = 1 if weighted_sum > 0 else -1
 
-        current_energy = Energy(new_pattern, weights)
+        current_energy = Energy(pattern, weights)
         energies.append(current_energy)
 
-        if np.array_equal(pattern, new_pattern):
-            break
-
-        pattern = new_pattern.copy()
-
-    return (new_pattern + 1) // 2, energies
+        # if energies[-1] == energies[-2]:
+        #     break
+        #
+        #
+    return (pattern + 1) // 2, energies
 
 
 def Energy(pattern, weights):
@@ -103,12 +98,9 @@ def Energy(pattern, weights):
 
 def weightMatrix(query):
     # Create a 2D array of the same size as the query
-    w_matrix = np.zeros((len(query), len(query)))
-    for i in range(len(query)):
-        for j in range(len(query)):
-            if i != j:
-                w_matrix[i][j] = (2 * query[i] - 1) * (2 * query[j] - 1)
-
+    query = query * 2 - 1
+    w_matrix = np.outer(query, query)
+    np.fill_diagonal(w_matrix, 0)
     return w_matrix
 
 
