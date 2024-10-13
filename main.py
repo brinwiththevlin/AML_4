@@ -16,18 +16,21 @@ def main():
     patterns = [pattern.reshape(-1, 1).astype(int) for pattern in train_data]
     test_patterns = [pattern.reshape(-1, 1).astype(int)
                      for pattern in test_data]
-    # test_patterns = [pattern.flatten() for pattern in test_data]
+
+    for i in range(len(patterns)):
+        plt.imshow(patterns[i].reshape(12, 12), cmap="gray")
+        plt.savefig(f"input/pattern_{i+1}.png")
+        plt.close()
+
     weights = sum([weightMatrix(pattern) for pattern in patterns])
 
-    # # test "memory" recall
-    # recalled_patterns_and_energies = [updateNetwork(
-    #     pattern, weights) for pattern in patterns]
-    #
-    # for i in range(len(patterns)):
-    #     transformationAnalysis(
-    #         i, patterns[i], recalled_patterns_and_energies[i])
-    #
-    # TODO: Test the network with the test data
+    # test "memory" recall
+    recalled_patterns_and_energies = [updateNetwork(
+        pattern, weights) for pattern in patterns]
+
+    for i in range(len(patterns)):
+        transformationAnalysis(
+            i, patterns[i], recalled_patterns_and_energies[i], test=False, early_stop=False)
 
     recalled_patterns_and_energies = [
         updateNetwork(pattern, weights) for pattern in test_patterns
@@ -35,10 +38,10 @@ def main():
 
     for i in range(len(patterns)):
         transformationAnalysis(
-            i, test_patterns[i], recalled_patterns_and_energies[i])
+            i, test_patterns[i], recalled_patterns_and_energies[i], test=True, early_stop=False)
 
 
-def transformationAnalysis(i, pattern, recalled_pattern_and_energies):
+def transformationAnalysis(i, pattern, recalled_pattern_and_energies, test=False, early_stop=False):
     pattern = pattern.copy().reshape(12, 12)
     recalled_pattern, energies = recalled_pattern_and_energies
     recalled_pattern = recalled_pattern.reshape(12, 12)
@@ -59,7 +62,10 @@ def transformationAnalysis(i, pattern, recalled_pattern_and_energies):
         left=None, bottom=None, right=None, top=None, wspace=0.8, hspace=None
     )
 
-    plt.savefig(f"./png/Pattern_{i+1}_Recalled_no_early.png")
+    filename = f"test_{i+1}" if test else f"pattern_{i+1}"
+    filename += "_early_stop" if early_stop else ""
+    plt.savefig(f"results/{filename}.png")
+    plt.close()
 
     # TODO calculate error between pattern and recalled pattern, display calculated error
     print(
@@ -82,8 +88,8 @@ def updateNetwork(pattern, weights, max_iterations=100):
 
         # if energies[-1] == energies[-2]:
         #     break
-        #
-        #
+
+
     return (pattern + 1) // 2, energies
 
 
